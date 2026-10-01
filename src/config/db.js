@@ -3,14 +3,18 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI;
+  const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/oneinfo_db";
 
-  if (!uri) {
-    throw new Error("MONGODB_URI is not defined in environment variables");
+  try {
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 2000,
+    });
+    console.log("MongoDB connected successfully");
+  } catch (error) {
+    console.warn(
+      `[Notice] MongoDB connection skipped (${error.message}). Gateway is operating with .env credentials in pure in-memory mode.`
+    );
   }
-
-  await mongoose.connect(uri);
-  console.log("MongoDB connected");
 };
 
 module.exports = connectDB;

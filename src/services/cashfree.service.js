@@ -1,16 +1,57 @@
 const axios = require("axios");
 
-const getCashfreeClient = () => {
-  const baseURL = process.env.CASHFREE_BASE_URL;
-  const clientId = process.env.CASHFREE_CLIENT_ID;
-  const clientSecret = process.env.CASHFREE_CLIENT_SECRET;
-  const apiVersion = process.env.CASHFREE_API_VERSION || "2023-08-01";
+/**
+ * Resolves credentials directly from .env based on the requested mode
+ */
+const getCredentialsForMode = (environment = "sandbox") => {
+  // Always refresh from .env so modifications to .env take effect immediately
+  require("dotenv").config({ override: true });
 
-  if (!baseURL || !clientId || !clientSecret) {
+  const mode = environment === "production" ? "production" : "sandbox";
+
+  let clientId;
+  let clientSecret;
+  let baseURL;
+  const apiVersion = "2023-08-01";
+
+  if (mode === "production") {
+    clientId = (
+      process.env.CASHFREE_PROD_CLIENT_ID || process.env.CASHFREE_CLIENT_ID
+    )?.trim();
+    clientSecret = (
+      process.env.CASHFREE_PROD_CLIENT_SECRET ||
+      process.env.CASHFREE_CLIENT_SECRET
+    )?.trim();
+    baseURL = "https://api.cashfree.com/verification";
+  } else {
+    clientId = (
+      process.env.CASHFREE_SANDBOX_CLIENT_ID || process.env.CASHFREE_CLIENT_ID
+    )?.trim();
+    clientSecret = (
+      process.env.CASHFREE_SANDBOX_CLIENT_SECRET ||
+      process.env.CASHFREE_CLIENT_SECRET
+    )?.trim();
+    baseURL = "https://sandbox.cashfree.com/verification";
+  }
+
+  if (!clientId || !clientSecret) {
     throw new Error(
-      "Cashfree credentials are not configured. Check CASHFREE_BASE_URL, CASHFREE_CLIENT_ID, and CASHFREE_CLIENT_SECRET."
+      `Verification provider credentials are not configured for '${mode}' mode. Please configure credentials in your environment.`
     );
   }
+
+
+  return {
+    clientId,
+    clientSecret,
+    baseURL,
+    apiVersion,
+  };
+};
+
+const getClient = (environment = "sandbox") => {
+  const { clientId, clientSecret, baseURL, apiVersion } =
+    getCredentialsForMode(environment);
 
   return axios.create({
     baseURL,
@@ -24,18 +65,131 @@ const getCashfreeClient = () => {
   });
 };
 
-const verifyPan = async ({ pan, name }) => {
-  const client = getCashfreeClient();
-  const payload = { pan };
-
-  if (name) {
-    payload.name = name;
+const sanitizeError = (error) => {
+  if (error.response?.data) {
+    const data = error.response.data;
+    if (typeof data.message === "string") {
+      data.message = data.message.replace(/cashfree/gi, "Verification Provider");
+    }
   }
+  if (typeof error.message === "string") {
+    error.message = error.message.replace(/cashfree/gi, "Verification Provider");
+  }
+  return error;
+};
 
-  const response = await client.post("/pan", payload);
-  return response.data;
+const verifyPan = async ({ pan, name, environment = "sandbox" }) => {
+  try {
+    const client = getClient(environment);
+    const payload = { pan };
+
+    if (name) {
+      payload.name = name;
+    }
+
+    const response = await client.post("/pan", payload);
+    return response.data;
+  } catch (error) {
+    throw sanitizeError(error);
+  }
+};
+
+const verifyDigiLockerAccount = async ({
+  verificationId,
+  aadhaarNumber,
+  mobileNumber,
+  environment = "sandbox",
+}) => {
+  try {
+    const client = getClient(environment);
+    const payload = {
+      verification_id: verificationId,
+    };
+
+    if (aadhaarNumber) {
+      payload.aadhaar_number = aadhaarNumber;
+    }
+
+    if (mobileNumber) {
+      payload.mobile_number = mobileNumber;
+    }
+
+    const response = await client.post("/digilocker/verify-account", payload);
+    return response.data;
+  } catch (error) {
+    throw sanitizeError(error);
+  }
+};
+
+const createDigiLockerUrl = async ({
+  verificationId,
+  documentRequested = ["AADHAAR"],
+  redirectUrl,
+  userFlow = "signup",
+  environment = "sandbox",
+}) => {
+  try {
+    const client = getClient(environment);
+    const payload = {
+      verification_id: verificationId,
+      document_requested: documentRequested,
+      redirect_url: redirectUrl,
+      user_flow: userFlow,
+    };
+
+    const response = await client.post("/digilocker", payload);
+    return response.data;
+  } catch (error) {
+    throw sanitizeError(error);
+  }
+};
+
+const getDigiLockerStatus = async ({
+  verificationId,
+  referenceId,
+  environment = "sandbox",
+}) => {
+  try {
+    const client = getClient(environment);
+    const params = {};
+
+    if (verificationId) params.verification_id = verificationId;
+    if (referenceId) params.reference_id = referenceId;
+
+    const response = await client.get("/digilocker", { params });
+    return response.data;
+  } catch (error) {
+    throw sanitizeError(error);
+  }
+};
+
+const getDigiLockerDocument = async ({
+  verificationId,
+  referenceId,
+  documentType = "AADHAAR",
+  environment = "sandbox",
+}) => {
+  try {
+    const client = getClient(environment);
+    const params = {};
+
+    if (verificationId) params.verification_id = verificationId;
+    if (referenceId) params.reference_id = referenceId;
+
+    const response = await client.get(`/digilocker/document/${documentType}`, {
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    throw sanitizeError(error);
+  }
 };
 
 module.exports = {
   verifyPan,
+  verifyDigiLockerAccount,
+  createDigiLockerUrl,
+  getDigiLockerStatus,
+  getDigiLockerDocument,
+  getCredentialsForMode,
 };

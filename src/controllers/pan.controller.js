@@ -1,4 +1,3 @@
-const PanVerification = require("../models/PanVerification");
 const cashfreeService = require("../services/cashfree.service");
 
 const mapResponse = (data, verificationId, requestedName) => ({
@@ -20,23 +19,25 @@ const mapResponse = (data, verificationId, requestedName) => ({
   fatherName: data.father_name,
 });
 
+/**
+ * Pure in-memory verification - NO data stored in DB
+ */
 const verifyPan = async (req, res) => {
   const { pan, name } = req.body;
-  const verificationId = `pan-${Date.now()}`;
+  const environment = req.environment || "sandbox";
+  const verificationId = req.body.verificationId || `pan-${Date.now()}`;
 
   try {
-    const cashfreeResponse = await cashfreeService.verifyPan({ pan, name });
-    const mapped = mapResponse(cashfreeResponse, verificationId, name);
-
-    await PanVerification.create({
-      ...mapped,
+    const providerResponse = await cashfreeService.verifyPan({
+      pan,
       name,
-      rawResponse: cashfreeResponse,
-      errorMessage: null,
+      environment,
     });
+    const mapped = mapResponse(providerResponse, verificationId, name);
 
     return res.status(200).json({
       success: true,
+      environment,
       data: mapped,
     });
   } catch (error) {
@@ -46,16 +47,9 @@ const verifyPan = async (req, res) => {
       error.response?.data?.error ||
       error.message;
 
-    await PanVerification.create({
-      verificationId,
-      pan,
-      name,
-      errorMessage: providerMessage,
-      rawResponse: error.response?.data || null,
-    });
-
     return res.status(status).json({
       success: false,
+      environment,
       message: "PAN verification failed",
       error: providerMessage,
       details: error.response?.data || null,
@@ -64,32 +58,17 @@ const verifyPan = async (req, res) => {
 };
 
 const getVerificationHistory = async (_req, res) => {
-  const records = await PanVerification.find()
-    .sort({ createdAt: -1 })
-    .limit(50)
-    .select("-rawResponse");
-
   return res.status(200).json({
     success: true,
-    data: records,
+    message: "Data storage is disabled. Verification history is not retained.",
+    data: [],
   });
 };
 
-const getVerificationById = async (req, res) => {
-  const record = await PanVerification.findOne({
-    verificationId: req.params.verificationId,
-  }).select("-rawResponse");
-
-  if (!record) {
-    return res.status(404).json({
-      success: false,
-      message: "Verification record not found",
-    });
-  }
-
-  return res.status(200).json({
-    success: true,
-    data: record,
+const getVerificationById = async (_req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: "Data storage is disabled. Verification records are not retained.",
   });
 };
 

@@ -4,6 +4,8 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const panRoutes = require("./routes/pan.routes");
+const aadhaarRoutes = require("./routes/aadhaar.routes");
+const oneinfoRoutes = require("./routes/oneinfo.routes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,10 +14,14 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
-  res.json({ success: true, message: "VeriAPIs backend is running" });
+  res.json({ success: true, message: "OneInfo Verification Gateway is running" });
 });
 
+app.use("/api/oneinfo", oneinfoRoutes);
 app.use("/api/pan", panRoutes);
+app.use("/api/aadhaar", aadhaarRoutes);
+
+
 
 const startServer = async () => {
   try {
@@ -30,3 +36,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+module.exports = app;
