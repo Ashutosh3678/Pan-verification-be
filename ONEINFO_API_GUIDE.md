@@ -5,8 +5,8 @@
 ## Base URLs & Required Headers
 
 ### Base URL
-* **Sandbox**: `https://kyc.oneinfo.ai` (Test environment with mock data and test OTPs)
-* **Production**: `https://kyc.oneinfo.ai` (Live environment)
+* **Sandbox**: `https://kyc.oneinfo.ai` (Test environment with mock data and test OTPs) - Free 
+* **Production**: `https://kyc.oneinfo.ai` (Live environment) - Charge
 
 ### Request Headers
 Every request must include your client credentials in the HTTP headers:
@@ -17,50 +17,6 @@ Every request must include your client credentials in the HTTP headers:
 | `x-client-secret` | string | **Yes** | Your private OneInfo Client Secret |
 | `x-environment` | string | **Yes** | `sandbox` for testing, `prod` for live operations |
 | `Content-Type` | string | **Yes** | `application/json` (or `multipart/form-data` for file uploads) |
-
----
-
-## Client Registration (Generate Credentials)
-
-Use this endpoint to register a new user or organization and receive your `x-client-id` and `x-client-secret`.
-
-### Endpoint
-* **Method**: `POST`
-* **URL**: `https://kyc.oneinfo.ai/api/oneinfo/clients/register`
-
-### Takes In (Request Body)
-```json
-{
-  "name": "Your Company Name"
-}
-```
-
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `name` | string | **Yes** | Name of your company, application, or organization |
-| `allowedModes` | array | Optional | `["sandbox", "production"]` (default: both enabled) |
-
-### Gives Out (Response 201 Created)
-```json
-{
-  "success": true,
-  "message": "OneInfo API Credentials generated successfully. Keep your clientSecret safe.",
-  "data": {
-    "name": "Your Company Name",
-    "clientId": "oi_cli_553bf3af620fc210",
-    "clientSecret": "oi_sec_9562d5fa80d70a026cd195509f0ba5420c35f966e979571c",
-    "allowedModes": [
-      "sandbox",
-      "production"
-    ],
-    "isActive": true
-  }
-}
-```
-
-*(Pass the returned `clientId` in `x-client-id` and `clientSecret` in `x-client-secret` for all subsequent verification calls).*
-
----
 
 ## 1. PAN Verification
 
@@ -155,6 +111,7 @@ Rapidly checks if an Aadhaar number or phone number already has an active DigiLo
   "verificationId": "aadhaar_check_102"
 }
 ```
+`Pass Aadhaar Number or Mobile number`
 
 | Parameter | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
@@ -187,7 +144,7 @@ Rapidly checks if an Aadhaar number or phone number already has an active DigiLo
 
 | Field | Test Value | Expected Result | Remarks |
 | :--- | :--- | :--- | :--- |
-| `aadhaarNumber` | `655675523712` | `ACCOUNT_EXISTS` (`accountExists: true`) | Active registered citizen account |
+| `aadhaarNumber` | `655675523712` | `ACCOUNT_NOT_FOUND` (`accountExists: true`) | Active registered citizen account |
 | `aadhaarNumber` | `655675523710` | `ACCOUNT_NOT_FOUND` (`accountExists: false`) | Unregistered citizen account |
 | `mobileNumber` | `9988112233` (any `9988xxxxxx`) | `ACCOUNT_EXISTS` (`accountExists: true`) | Registered citizen phone |
 
