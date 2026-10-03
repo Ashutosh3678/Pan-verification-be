@@ -14,7 +14,7 @@ const analyticsSchema = new mongoose.Schema(
     service: {
       type: String,
       required: true,
-      enum: ["PAN", "AADHAAR", "SYSTEM"],
+      enum: ["PAN", "AADHAAR", "ESIGN", "FACE", "GSTIN", "MOBILE360", "SYSTEM"],
       index: true,
     },
     action: {
@@ -26,6 +26,11 @@ const analyticsSchema = new mongoose.Schema(
         "LINK_CLICKED",
         "STATUS_CHECK",
         "DOCUMENT_FETCH",
+        "DOCUMENT_UPLOAD",
+        "REQUEST_CREATE",
+        "LIVENESS_CHECK",
+        "SEND_OTP",
+        "VERIFY_OTP",
       ],
       index: true,
     },

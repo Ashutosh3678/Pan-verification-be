@@ -17,7 +17,7 @@ setInterval(() => {
       rateLimitMap.set(key, valid);
     }
   }
-}, 60000);
+}, 60000).unref();
 
 /**
  * Guardrail middleware factory for a given service ('PAN' or 'AADHAAR')
@@ -33,8 +33,18 @@ const checkGuardrail = (service) => {
     require("dotenv").config({ override: true });
 
     // 2. Feature Flag (Kill-switch) Check
-    const isPan = service === "PAN";
-    const flagKey = isPan ? "ENABLE_PROD_PAN" : "ENABLE_PROD_AADHAAR";
+    const flagKey =
+      service === "PAN"
+        ? "ENABLE_PROD_PAN"
+        : service === "AADHAAR"
+        ? "ENABLE_PROD_AADHAAR"
+        : service === "FACE"
+        ? "ENABLE_PROD_FACE"
+        : service === "GSTIN"
+        ? "ENABLE_PROD_GSTIN"
+        : service === "MOBILE360"
+        ? "ENABLE_PROD_MOBILE360"
+        : "ENABLE_PROD_ESIGN";
     const isEnabled = process.env[flagKey] !== "false";
 
     if (!isEnabled) {
@@ -67,8 +77,20 @@ const checkGuardrail = (service) => {
     rateLimitMap.set(rateLimitKey, timestamps);
 
     // 4. Daily Production Quota Cap Check (from Analytics in MongoDB)
-    const limitKey = isPan ? "PROD_PAN_DAILY_LIMIT" : "PROD_AADHAAR_DAILY_LIMIT";
-    const dailyLimit = Number(process.env[limitKey]) || (isPan ? 100 : 50);
+    const limitKey =
+      service === "PAN"
+        ? "PROD_PAN_DAILY_LIMIT"
+        : service === "AADHAAR"
+        ? "PROD_AADHAAR_DAILY_LIMIT"
+        : service === "FACE"
+        ? "PROD_FACE_DAILY_LIMIT"
+        : service === "GSTIN"
+        ? "PROD_GSTIN_DAILY_LIMIT"
+        : service === "MOBILE360"
+        ? "PROD_MOBILE360_DAILY_LIMIT"
+        : "PROD_ESIGN_DAILY_LIMIT";
+    const defaultLimit = service === "PAN" || service === "GSTIN" ? 100 : 50;
+    const dailyLimit = Number(process.env[limitKey]) || defaultLimit;
 
     if (mongoose.connection.readyState === 1) {
       try {

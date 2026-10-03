@@ -9,20 +9,19 @@ const apiClientSchema = new mongoose.Schema(
     },
     apiKey: {
       type: String,
+      trim: true,
+      default: null,
+    },
+    clientId: {
+      type: String,
       unique: true,
       required: true,
       trim: true,
       index: true,
     },
-    clientId: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-      index: true,
-    },
     clientSecret: {
       type: String,
+      required: true,
       trim: true,
     },
     allowedModes: {

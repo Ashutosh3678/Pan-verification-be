@@ -52,6 +52,19 @@ const normalizeEndpointPath = (rawEndpoint) => {
     return "/aadhaar/initiate";
   if (rawEndpoint.includes("/aadhaar/status")) return "/aadhaar/status";
   if (rawEndpoint.includes("/aadhaar/document")) return "/aadhaar/document";
+  if (rawEndpoint.includes("/esign/document/upload") || rawEndpoint.includes("/esign/upload"))
+    return "/esign/document/upload";
+  if (rawEndpoint.includes("/esign/request") || rawEndpoint.includes("/esign/create"))
+    return "/esign/request";
+  if (rawEndpoint.includes("/esign/status")) return "/esign/status";
+  if (rawEndpoint.includes("/face/liveness") || rawEndpoint.includes("/face/check"))
+    return "/face/liveness";
+  if (rawEndpoint.includes("/gstin/verify") || rawEndpoint.includes("/gstin"))
+    return "/gstin/verify";
+  if (rawEndpoint.includes("/mobile360/otp/send") || rawEndpoint.includes("/mobile360/send"))
+    return "/mobile360/otp/send";
+  if (rawEndpoint.includes("/mobile360/otp/verify") || rawEndpoint.includes("/mobile360/verify"))
+    return "/mobile360/otp/verify";
   return rawEndpoint;
 };
 
@@ -64,8 +77,16 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
 
   const panDailyLimit = Number(process.env.PROD_PAN_DAILY_LIMIT) || 100;
   const aadhaarDailyLimit = Number(process.env.PROD_AADHAAR_DAILY_LIMIT) || 50;
+  const esignDailyLimit = Number(process.env.PROD_ESIGN_DAILY_LIMIT) || 50;
+  const faceDailyLimit = Number(process.env.PROD_FACE_DAILY_LIMIT) || 50;
+  const gstinDailyLimit = Number(process.env.PROD_GSTIN_DAILY_LIMIT) || 100;
+  const mobile360DailyLimit = Number(process.env.PROD_MOBILE360_DAILY_LIMIT) || 50;
   const isProdPanEnabled = process.env.ENABLE_PROD_PAN !== "false";
   const isProdAadhaarEnabled = process.env.ENABLE_PROD_AADHAAR !== "false";
+  const isProdEsignEnabled = process.env.ENABLE_PROD_ESIGN !== "false";
+  const isProdFaceEnabled = process.env.ENABLE_PROD_FACE !== "false";
+  const isProdGstinEnabled = process.env.ENABLE_PROD_GSTIN !== "false";
+  const isProdMobile360Enabled = process.env.ENABLE_PROD_MOBILE360 !== "false";
 
   if (mongoose.connection.readyState !== 1) {
     return {
@@ -74,6 +95,10 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
         production: {
           pan: { enabled: isProdPanEnabled, todayUsed: 0, dailyLimit: panDailyLimit, remaining: panDailyLimit },
           aadhaar: { enabled: isProdAadhaarEnabled, todayUsed: 0, dailyLimit: aadhaarDailyLimit, remaining: aadhaarDailyLimit },
+          esign: { enabled: isProdEsignEnabled, todayUsed: 0, dailyLimit: esignDailyLimit, remaining: esignDailyLimit },
+          face: { enabled: isProdFaceEnabled, todayUsed: 0, dailyLimit: faceDailyLimit, remaining: faceDailyLimit },
+          gstin: { enabled: isProdGstinEnabled, todayUsed: 0, dailyLimit: gstinDailyLimit, remaining: gstinDailyLimit },
+          mobile360: { enabled: isProdMobile360Enabled, todayUsed: 0, dailyLimit: mobile360DailyLimit, remaining: mobile360DailyLimit },
         },
       },
       totalsByEnvironment: {
@@ -82,6 +107,10 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
       },
       aadhaarEndpointBreakdown: {},
       panEndpointBreakdown: {},
+      esignEndpointBreakdown: {},
+      faceEndpointBreakdown: {},
+      gstinEndpointBreakdown: {},
+      mobile360EndpointBreakdown: {},
       recentActivity: [],
     };
   }
@@ -103,6 +132,10 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
   const [
     panTodayUsed,
     aadhaarTodayUsed,
+    esignTodayUsed,
+    faceTodayUsed,
+    gstinTodayUsed,
+    mobile360TodayUsed,
     envTotals,
     endpointStats,
     recentEvents,
@@ -115,6 +148,26 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
     }),
     Analytics.countDocuments({
       service: "AADHAAR",
+      environment: "production",
+      createdAt: { $gte: startOfDay },
+    }),
+    Analytics.countDocuments({
+      service: "ESIGN",
+      environment: "production",
+      createdAt: { $gte: startOfDay },
+    }),
+    Analytics.countDocuments({
+      service: "FACE",
+      environment: "production",
+      createdAt: { $gte: startOfDay },
+    }),
+    Analytics.countDocuments({
+      service: "GSTIN",
+      environment: "production",
+      createdAt: { $gte: startOfDay },
+    }),
+    Analytics.countDocuments({
+      service: "MOBILE360",
       environment: "production",
       createdAt: { $gte: startOfDay },
     }),
@@ -189,10 +242,40 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
     "/pan/verify": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
   };
 
+  const esignEndpoints = {
+    "/esign/document/upload": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+    "/esign/request": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+    "/esign/status": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+  };
+
+  const faceEndpoints = {
+    "/face/liveness": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+  };
+
+  const gstinEndpoints = {
+    "/gstin/verify": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+  };
+
+  const mobile360Endpoints = {
+    "/mobile360/otp/send": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+    "/mobile360/otp/verify": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+  };
+
   for (const item of endpointStats) {
     const normalized = normalizeEndpointPath(item._id.endpoint);
     const env = item._id.environment === "production" ? "production" : "sandbox";
-    const targetMap = item._id.service === "PAN" ? panEndpoints : aadhaarEndpoints;
+    const targetMap =
+      item._id.service === "PAN"
+        ? panEndpoints
+        : item._id.service === "ESIGN"
+        ? esignEndpoints
+        : item._id.service === "FACE"
+        ? faceEndpoints
+        : item._id.service === "GSTIN"
+        ? gstinEndpoints
+        : item._id.service === "MOBILE360"
+        ? mobile360Endpoints
+        : aadhaarEndpoints;
 
     if (!targetMap[normalized]) {
       targetMap[normalized] = {
@@ -223,6 +306,30 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
           dailyLimit: aadhaarDailyLimit,
           remaining: Math.max(0, aadhaarDailyLimit - aadhaarTodayUsed),
         },
+        esign: {
+          enabled: isProdEsignEnabled,
+          todayUsed: esignTodayUsed,
+          dailyLimit: esignDailyLimit,
+          remaining: Math.max(0, esignDailyLimit - esignTodayUsed),
+        },
+        face: {
+          enabled: isProdFaceEnabled,
+          todayUsed: faceTodayUsed,
+          dailyLimit: faceDailyLimit,
+          remaining: Math.max(0, faceDailyLimit - faceTodayUsed),
+        },
+        gstin: {
+          enabled: isProdGstinEnabled,
+          todayUsed: gstinTodayUsed,
+          dailyLimit: gstinDailyLimit,
+          remaining: Math.max(0, gstinDailyLimit - gstinTodayUsed),
+        },
+        mobile360: {
+          enabled: isProdMobile360Enabled,
+          todayUsed: mobile360TodayUsed,
+          dailyLimit: mobile360DailyLimit,
+          remaining: Math.max(0, mobile360DailyLimit - mobile360TodayUsed),
+        },
       },
     },
     totalsByEnvironment: {
@@ -231,6 +338,10 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
     },
     aadhaarEndpointBreakdown: aadhaarEndpoints,
     panEndpointBreakdown: panEndpoints,
+    esignEndpointBreakdown: esignEndpoints,
+    faceEndpointBreakdown: faceEndpoints,
+    gstinEndpointBreakdown: gstinEndpoints,
+    mobile360EndpointBreakdown: mobile360Endpoints,
     recentActivity: recentEvents,
   };
 };

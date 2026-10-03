@@ -24,7 +24,7 @@ const authenticateClient = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message:
-          "Authentication required. Provide 'x-api-key' (or 'Authorization: Bearer <key>') or 'x-client-id' & 'x-client-secret' headers.",
+          "Authentication required. Provide 'x-client-id' & 'x-client-secret' headers.",
       });
     }
 

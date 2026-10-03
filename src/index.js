@@ -5,6 +5,10 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const panRoutes = require("./routes/pan.routes");
 const aadhaarRoutes = require("./routes/aadhaar.routes");
+const esignRoutes = require("./routes/esign.routes");
+const faceRoutes = require("./routes/face.routes");
+const gstinRoutes = require("./routes/gstin.routes");
+const mobile360Routes = require("./routes/mobile360.routes");
 const oneinfoRoutes = require("./routes/oneinfo.routes");
 
 const app = express();
@@ -17,9 +21,20 @@ app.get("/api/health", (_req, res) => {
   res.json({ success: true, message: "OneInfo Verification Gateway is running" });
 });
 
+const oneinfoController = require("./controllers/oneinfo.controller");
+
+app.use("/api", oneinfoRoutes);
 app.use("/api/oneinfo", oneinfoRoutes);
 app.use("/api/pan", panRoutes);
 app.use("/api/aadhaar", aadhaarRoutes);
+app.use("/api/esign", esignRoutes);
+app.use("/api/face", faceRoutes);
+app.use("/api/gstin", gstinRoutes);
+app.use("/api/mobile360", mobile360Routes);
+
+// White-labeled E-Sign Redirection & Download Gateway
+app.get("/esign", oneinfoController.handleEsignRedirect);
+app.get("/esign/download/:verificationId", oneinfoController.downloadSignedDocument);
 
 
 
