@@ -98,6 +98,11 @@ router.get(
   oneinfoController.getAadhaarDocument
 );
 
+// White-labeled DigiLocker Redirect Gateway
+router.get("/dgl", oneinfoController.handleDigilockerRedirect);
+router.get("/digilocker", oneinfoController.handleDigilockerRedirect);
+router.get("/aadhaar/consent", oneinfoController.handleDigilockerRedirect);
+
 // -------------------------------------------------------------
 // E-SIGN VERIFICATION ENDPOINTS (Protected - Zero Data Stored)
 // -------------------------------------------------------------

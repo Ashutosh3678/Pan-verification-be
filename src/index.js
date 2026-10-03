@@ -36,6 +36,10 @@ app.use("/api/mobile360", mobile360Routes);
 app.get("/esign", oneinfoController.handleEsignRedirect);
 app.get("/esign/download/:verificationId", oneinfoController.downloadSignedDocument);
 
+// White-labeled DigiLocker Redirection Gateway
+app.get("/dgl", oneinfoController.handleDigilockerRedirect);
+app.get("/digilocker", oneinfoController.handleDigilockerRedirect);
+
 
 
 const startServer = async () => {

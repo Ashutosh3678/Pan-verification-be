@@ -246,7 +246,23 @@ Provides direct verification and a 3-step legally compliant DigiLocker consent f
 }
 ```
 
-Response returns `url` to redirect the user to complete Aadhaar OTP consent.
+```json
+{
+  "success": true,
+  "environment": "sandbox",
+  "data": {
+    "verificationId": "digi_session_1001",
+    "referenceId": 76030,
+    "url": "https://kyc.oneinfo.ai/dgl?shortCode=t59hasdku7l0&env=sandbox",
+    "status": "PENDING",
+    "userFlow": "signup",
+    "documentRequested": ["AADHAAR"],
+    "redirectUrl": "https://yourapp.com/kyc-callback"
+  }
+}
+```
+
+Response returns a fully white-labeled `url` (`https://kyc.oneinfo.ai/dgl?shortCode=...`) to redirect the user to complete Aadhaar OTP consent. Gateway automatically redirects the browser securely to the verification flow.
 
 #### Step 2: Check Status
 * **Method**: `GET`
@@ -453,11 +469,80 @@ Response gives:
 ```json
 {
   "otp": "123456",
-  "reference_id": 151169
+  "verificationId": "mob360_1791016078480_8h4xd"
 }
 ```
 
-Response confirms OTP verification and provides mobile score, operator details, and telecom risk intelligence.
+Response gives:
+```json
+{
+  "success": true,
+  "environment": "sandbox",
+  "data": {
+    "verificationId": "mob360_1791016078480_8h4xd",
+    "referenceId": 151169,
+    "status": "SUCCESS",
+    "creditScore": 805,
+    "personalDetails": {
+      "fullName": "JOHN SNOW",
+      "gender": "MALE",
+      "totalIncome": "1000000",
+      "occupation": "Software Engineer",
+      "age": "30",
+      "dob": "1996-10-02"
+    },
+    "phoneNumbers": [
+      { "type": "MOBILE", "phone": "9876543210", "linkedTo": "PAN" },
+      { "type": "MOBILE", "phone": "9988775566", "linkedTo": "UAN" }
+    ],
+    "emails": [
+      { "email": "johnsnow@example.com", "linkedTo": "CREDIT" }
+    ],
+    "addresses": [
+      {
+        "address": "123 Main Street, Cityville",
+        "type": "Home",
+        "state": "StateName",
+        "pincode": "123456",
+        "linkedTo": "CREDIT"
+      }
+    ],
+    "panDetails": [
+      { "panNumber": "ABCPV1234D" }
+    ],
+    "bankAccountDetails": [
+      {
+        "bankAccount": "20329012345",
+        "ifsc": "SBIN0012345",
+        "bankAddress": "STATE BANK OF INDIA",
+        "linkedTo": "UAN"
+      }
+    ],
+    "mobileNumberIntelligence": {
+      "isValidNumber": true,
+      "subscriberStatus": "CONNECTED",
+      "connectionType": "PREPAID",
+      "currentServiceProvider": "AIRTEL",
+      "networkRegion": "India",
+      "isPorted": false
+    },
+    "riskIntelligence": {
+      "isSafe": true,
+      "riskLevel": "LOW",
+      "overallRiskLevel": "LOW"
+    }
+  }
+}
+```
+
+> **Interpreting `creditScore: null` (New to Credit / Alternate Data Sources)**:
+> - **What it means**: When `creditScore` is `null`, it indicates the applicant has **no existing formal credit bureau history** (CIBIL / Experian) and is **New to Credit (NTC)**.
+> - **Not an error**: The verification request is successful (`status: "SUCCESS"`).
+> - **Source of Profile Data**: Even with `creditScore: null`, all demographic, employment, and telecom intelligence is populated from alternative verified national sources:
+>   - **EPFO / UAN Records** (`linkedTo: "UAN"`): Employment history, organization name, and salary bank accounts.
+>   - **Income Tax / PAN Registry** (`linkedTo: "PAN"`): Verified legal name, PAN number, and date of birth.
+>   - **Telecom Operator Networks**: Live SIM status, carrier network (Airtel, Jio, Vi), subscriber active status, and fraud risk score.
+>   - **Alternate Consumer Footprints** (`linkedTo: "CREDIT"`): Verified contact email addresses and residential/work addresses recorded across digital services.
 
 #### Sandbox Test UTA
 - **Test Mobile Number**: `9876543210`

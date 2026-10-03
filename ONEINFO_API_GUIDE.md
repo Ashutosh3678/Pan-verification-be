@@ -237,10 +237,11 @@ Generates a secure verification link where the user authenticates via Aadhaar OT
   "data": {
     "verificationId": "aadhaar_session_201",
     "referenceId": 981274,
-    "status": "INITIATED",
-    "url": "https://kyc.oneinfo.ai/verify/session?code=a1b2c3d4e5f6",
+    "status": "PENDING",
+    "url": "https://kyc.oneinfo.ai/dgl?shortCode=t59hasdku7l0&env=sandbox",
+    "userFlow": "signup",
     "documentRequested": ["AADHAAR"],
-    "validUntil": "2026-10-03T14:00:00Z"
+    "redirectUrl": "https://yourapp.com/kyc/callback"
   }
 }
 ```
@@ -827,6 +828,17 @@ Validates the OTP entered by the user and returns the full intelligence profile 
 }
 ```
 
+#### Understanding `creditScore: null` (New to Credit / Alternate Data Sources)
+
+> **Important Note on `creditScore: null`**:
+> * **What it means**: If `creditScore` is returned as `null`, it signifies that the user has **no existing formal credit bureau footprint** (e.g. no prior bank loans, credit cards, or credit inquiries in CIBIL/Experian) — commonly referred to as **New to Credit (NTC)**.
+> * **It is NOT an error**: The verification request is completely successful (`status: "SUCCESS"`).
+> * **Where the profile data comes from**: Even when `creditScore` is `null`, the comprehensive user intelligence profile is still retrieved and cross-verified from alternative verified national registries:
+>   * **EPFO / UAN Records** (`linkedTo: "UAN"`): Employment history, employer organization, and active PF salary bank accounts.
+>   * **Income Tax Department / PAN Registry** (`linkedTo: "PAN"`): Legally verified taxpayer name, PAN number, and date of birth.
+>   * **Live Telecom Operator Networks**: Real-time SIM status (active/inactive), service provider (Airtel, Jio, Vi), subscriber category (prepaid/postpaid), and SIM-swap risk rating.
+>   * **Alternative Consumer Footprints** (`linkedTo: "CREDIT"`): Verified contact email addresses and residential/work addresses recorded across digital services.
+
 ---
 
 ### Sandbox Test Data for Mobile 360
@@ -835,7 +847,7 @@ Validates the OTP entered by the user and returns the full intelligence profile 
 | :--- | :--- | :--- | :--- |
 | `mobileNumber` | `9999999999` | `OTP_GENERATED` | Valid test mobile number |
 | `verificationId` | `ABC00122` (or prefix `ABC...`) | Accepted session ID | Unique alphanumeric string |
-| `otp` | **`123456`** | `SUCCESS` (`creditScore: 805`) | Universal Sandbox OTP returning full credit score & profile |
+| `otp` | **`123456`** | `SUCCESS` (`creditScore: 805` or `null`) | Universal Sandbox OTP. Note: When user is New to Credit (NTC), `creditScore` returns `null` while alternative data points remain populated. |
 | `mobileNumber` | `8888888888` | `DETAILS_NOT_FOUND` | Simulates unregistered mobile number |
 
 ---

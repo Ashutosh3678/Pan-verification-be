@@ -21,10 +21,30 @@ const mapAccountVerifyResponse = (
   digilockerId: data.digilocker_id || null,
 });
 
-const mapInitiateResponse = (data, verificationId, redirectUrl, userFlow) => ({
+const wrapDigiLockerUrl = (originalUrl, environment = "sandbox") => {
+  if (!originalUrl || typeof originalUrl !== "string") return originalUrl;
+
+  try {
+    const parsed = new URL(originalUrl);
+    const baseUrl = (process.env.ONEINFO_BASE_URL || "https://kyc.oneinfo.ai").replace(/\/+$/, "");
+
+    const params = new URLSearchParams(parsed.search);
+    if (environment === "sandbox" && !params.has("env")) {
+      params.set("env", "sandbox");
+    }
+
+    const queryStr = params.toString() ? `?${params.toString()}` : "";
+    return `${baseUrl}/dgl${queryStr}`;
+  } catch {
+    const baseUrl = (process.env.ONEINFO_BASE_URL || "https://kyc.oneinfo.ai").replace(/\/+$/, "");
+    return originalUrl.replace(/https?:\/\/[^/]+(?:\.cashfree\.com\/dgl|\/dgl)/i, `${baseUrl}/dgl`);
+  }
+};
+
+const mapInitiateResponse = (data, verificationId, redirectUrl, userFlow, environment = "sandbox") => ({
   verificationId,
   referenceId: data.reference_id,
-  url: data.url,
+  url: wrapDigiLockerUrl(data.url, environment),
   status: data.status || "PENDING",
   userFlow: data.user_flow || userFlow,
   documentRequested: data.document_requested || ["AADHAAR"],
@@ -115,7 +135,8 @@ const initiateDigiLocker = async (req, res) => {
       providerResponse,
       verificationId,
       redirectUrl,
-      userFlow
+      userFlow,
+      environment
     );
 
     return res.status(200).json({

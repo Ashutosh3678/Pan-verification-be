@@ -172,6 +172,29 @@ const verifyAadhaar = async (req, res) => {
 };
 
 /**
+ * Wraps DigiLocker consent link into white-labeled OneInfo gateway URL
+ */
+const wrapDigiLockerUrl = (originalUrl, environment = "sandbox") => {
+  if (!originalUrl || typeof originalUrl !== "string") return originalUrl;
+
+  try {
+    const parsed = new URL(originalUrl);
+    const baseUrl = (process.env.ONEINFO_BASE_URL || "https://kyc.oneinfo.ai").replace(/\/+$/, "");
+
+    const params = new URLSearchParams(parsed.search);
+    if (environment === "sandbox" && !params.has("env")) {
+      params.set("env", "sandbox");
+    }
+
+    const queryStr = params.toString() ? `?${params.toString()}` : "";
+    return `${baseUrl}/dgl${queryStr}`;
+  } catch {
+    const baseUrl = (process.env.ONEINFO_BASE_URL || "https://kyc.oneinfo.ai").replace(/\/+$/, "");
+    return originalUrl.replace(/https?:\/\/[^/]+(?:\.cashfree\.com\/dgl|\/dgl)/i, `${baseUrl}/dgl`);
+  }
+};
+
+/**
  * Initiate DigiLocker Link - Tracks link generation metrics
  */
 const initiateDigiLocker = async (req, res) => {
@@ -196,7 +219,7 @@ const initiateDigiLocker = async (req, res) => {
     const mapped = {
       verificationId,
       referenceId: providerResponse.reference_id,
-      url: providerResponse.url,
+      url: wrapDigiLockerUrl(providerResponse.url, environment),
       status: providerResponse.status || "PENDING",
       userFlow: providerResponse.user_flow || userFlow,
       documentRequested: providerResponse.document_requested || documentRequested,
@@ -637,6 +660,38 @@ const handleEsignRedirect = (req, res) => {
   }
 
   const targetUrl = `https://${host}/esign?${queryParams.toString()}`;
+  return res.redirect(302, targetUrl);
+};
+
+/**
+ * Redirects white-labeled /dgl or /digilocker link to the provider DigiLocker interface
+ */
+const handleDigilockerRedirect = (req, res) => {
+  const shortCode = req.query.shortCode || req.query.code;
+  if (!shortCode) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing or invalid DigiLocker link shortCode parameter",
+    });
+  }
+
+  const isSandbox =
+    req.query.env === "sandbox" ||
+    req.query.mode === "sandbox" ||
+    req.query.environment === "sandbox";
+
+  const host = isSandbox
+    ? "verification-test.cashfree.com"
+    : "verification.cashfree.com";
+
+  const queryParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(req.query)) {
+    if (!["env", "mode", "environment"].includes(key)) {
+      queryParams.set(key, value);
+    }
+  }
+
+  const targetUrl = `https://${host}/dgl?${queryParams.toString()}`;
   return res.redirect(302, targetUrl);
 };
 
@@ -1360,6 +1415,8 @@ module.exports = {
   downloadSignedDocument,
   wrapSigningLink,
   wrapSignedDocUrl,
+  handleDigilockerRedirect,
+  wrapDigiLockerUrl,
   getAnalyticsSummary,
   createApiClient,
   listApiClients,
