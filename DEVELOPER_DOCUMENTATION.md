@@ -18,7 +18,7 @@
    - [5.4 Aadhaar E-Sign (Electronic Document Signing)](#54-aadhaar-e-sign-electronic-document-signing)
    - [5.5 Face Liveness & Biometric Detection](#55-face-liveness--biometric-detection)
    - [5.6 GSTIN Verification](#56-gstin-verification)
-   - [5.7 Mobile 360 OTP & Intelligence Flow](#57-mobile-360-otp--intelligence-flow)
+   - [5.7 Account Aggregator OTP & Intelligence Flow](#57-account-aggregator-otp--intelligence-flow)
    - [5.8 Telemetry & Analytics Dashboard](#58-telemetry--analytics-dashboard)
 6. [Security Guardrails, Rate Limiting & Safety Controls](#6-security-guardrails-rate-limiting--safety-controls)
 7. [Codebase Architecture & Directory Map](#7-codebase-architecture--directory-map)
@@ -62,10 +62,10 @@ OneInfo is an enterprise-grade KYC, identity verification, biometrics, and elect
      ┌───────────────────────────┼───────────────────────────┐
      │                           │                           │
      ▼                           ▼                           ▼
-┌──────────────┐         ┌───────────────┐           ┌──────────────┐
-│  Income Tax  │         │ UIDAI / eSign │           │  GSTN / Telco│
-│   (PAN DB)   │         │  (DigiLocker) │           │  (Mobile360) │
-└──────────────┘         └───────────────┘           └──────────────┘
+┌──────────────┐         ┌───────────────┐           ┌────────────────────┐
+│  Income Tax  │         │ UIDAI / eSign │           │ Account Aggregator │
+│   (PAN DB)   │         │  (DigiLocker) │           │    (Telco / CIBIL) │
+└──────────────┘         └───────────────┘           └────────────────────┘
 ```
 
 ---
@@ -90,7 +90,7 @@ All services are mounted under a clean, unified RESTful prefix:
 - Backwards compatibility is preserved for legacy `/api/oneinfo/...` callers.
 
 ### 2.4 Auto-Synchronized Timestamps
-Upstream providers (such as Mobile 360) mandate timestamps within a strict 5-minute window. The gateway automatically injects current UTC timestamps (`new Date().toISOString()`) on incoming requests, eliminating client-side clock drift failures.
+Upstream providers (such as Account Aggregator / Telecom intelligence) mandate timestamps within a strict 5-minute window. The gateway automatically injects current UTC timestamps (`new Date().toISOString()`) on incoming requests, eliminating client-side clock drift failures.
 
 ---
 
@@ -136,8 +136,8 @@ Internal administrative operations (e.g., viewing registered client lists) can a
 | **E-Sign Document Download** | `GET` | `/api/esign/download/:verificationId` |
 | **Face Liveness Check** | `POST` | `/api/face/liveness` *(or `/api/face/check`)* |
 | **GSTIN Verification** | `POST` | `/api/gstin/verify` *(or `/api/gstin`)* |
-| **Mobile 360 Send OTP** | `POST` | `/api/mobile360/otp/send` |
-| **Mobile 360 Verify OTP** | `POST` | `/api/mobile360/otp/verify` |
+| **Account Aggregator Send OTP** | `POST` | `/api/account-aggregator/otp/send` *(or `/api/mobile360/otp/send`)* |
+| **Account Aggregator Verify OTP** | `POST` | `/api/account-aggregator/otp/verify` *(or `/api/mobile360/otp/verify`)* |
 | **Analytics Summary** | `GET` | `/api/analytics/summary` |
 
 ---
@@ -430,13 +430,13 @@ Validates any 15-character Goods and Services Tax Identification Number against 
 
 ---
 
-### 5.7 Mobile 360 OTP & Intelligence Flow
+### 5.7 Account Aggregator OTP & Intelligence Flow
 
-Generates and delivers a One-Time Password to a mobile device with timestamp synchronization, and upon verification returns telecom profile intelligence.
+Generates and delivers a One-Time Password to an applicant's mobile device with timestamp synchronization, and upon verification returns multi-bureau credit score (CIBIL), employment details, and telecom risk intelligence.
 
 #### Step 1: Send OTP
 * **Method**: `POST`
-* **URL**: `https://kyc.oneinfo.ai/api/mobile360/otp/send`
+* **URL**: `https://kyc.oneinfo.ai/api/account-aggregator/otp/send` *(or `https://kyc.oneinfo.ai/api/oneinfo/account-aggregator/otp/send`)*
 
 ```json
 {
@@ -453,7 +453,7 @@ Response gives:
   "success": true,
   "environment": "sandbox",
   "data": {
-    "verificationId": "mob360_1791016078480_8h4xd",
+    "verificationId": "aa_session_1791016078480",
     "mobileNumber": "9876543210",
     "status": "OTP_GENERATED",
     "referenceId": 151169,
@@ -464,12 +464,12 @@ Response gives:
 
 #### Step 2: Verify OTP & Retrieve Profile
 * **Method**: `POST`
-* **URL**: `https://kyc.oneinfo.ai/api/mobile360/otp/verify`
+* **URL**: `https://kyc.oneinfo.ai/api/account-aggregator/otp/verify` *(or `https://kyc.oneinfo.ai/api/oneinfo/account-aggregator/otp/verify`)*
 
 ```json
 {
   "otp": "123456",
-  "verificationId": "mob360_1791016078480_8h4xd"
+  "verificationId": "aa_session_1791016078480"
 }
 ```
 
@@ -612,7 +612,8 @@ Pan_verification/
     │   ├── esign.controller.js           # E-Sign handlers & download proxy
     │   ├── face.controller.js            # Face liveness handlers
     │   ├── gstin.controller.js           # GSTIN verification handlers
-    │   └── mobile360.controller.js       # Mobile 360 OTP handlers
+    │   ├── accountAggregator.controller.js # Account Aggregator OTP handlers
+    │   └── mobile360.controller.js       # Backwards-compatible alias handlers
     ├── middleware/
     │   ├── authenticateClient.js         # Client authentication (x-client-id/secret)
     │   ├── guardrails.middleware.js      # Production quotas, rate limits, kill-switches
@@ -633,7 +634,8 @@ Pan_verification/
     │   ├── esign.routes.js               # E-Sign routes
     │   ├── face.routes.js                # Face routes
     │   ├── gstin.routes.js               # GSTIN routes
-    │   └── mobile360.routes.js           # Mobile 360 routes
+    │   ├── accountAggregator.routes.js   # Account Aggregator routes
+    │   └── mobile360.routes.js           # Backwards-compatible alias routes
     └── services/
         ├── cashfree.service.js           # Provider integration adapter (pure upstream)
         └── analytics.service.js          # Asynchronous fire-and-forget event recorder

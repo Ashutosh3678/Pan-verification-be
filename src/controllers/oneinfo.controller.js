@@ -1206,7 +1206,7 @@ const sendMobileOtp = async (req, res) => {
       client: req.client,
       service: "MOBILE360",
       action: "SEND_OTP",
-      endpoint: req.originalUrl || "/api/mobile360/otp/send",
+      endpoint: req.originalUrl || "/api/account-aggregator/otp/send",
       environment,
       status: "SUCCESS",
       statusCode: 200,
@@ -1229,7 +1229,7 @@ const sendMobileOtp = async (req, res) => {
       client: req.client,
       service: "MOBILE360",
       action: "SEND_OTP",
-      endpoint: req.originalUrl || "/api/mobile360/otp/send",
+      endpoint: req.originalUrl || "/api/account-aggregator/otp/send",
       environment,
       status: "FAILURE",
       statusCode: status,
@@ -1240,7 +1240,7 @@ const sendMobileOtp = async (req, res) => {
     return res.status(status).json({
       success: false,
       environment,
-      message: "Mobile 360 OTP generation failed",
+      message: "Account Aggregator OTP generation failed",
       error: providerMessage,
       details: error.response?.data || null,
     });
@@ -1357,7 +1357,7 @@ const verifyMobileOtp = async (req, res) => {
       client: req.client,
       service: "MOBILE360",
       action: "VERIFY_OTP",
-      endpoint: req.originalUrl || "/api/mobile360/otp/verify",
+      endpoint: req.originalUrl || "/api/account-aggregator/otp/verify",
       environment,
       status: "SUCCESS",
       statusCode: 200,
@@ -1380,7 +1380,7 @@ const verifyMobileOtp = async (req, res) => {
       client: req.client,
       service: "MOBILE360",
       action: "VERIFY_OTP",
-      endpoint: req.originalUrl || "/api/mobile360/otp/verify",
+      endpoint: req.originalUrl || "/api/account-aggregator/otp/verify",
       environment,
       status: "FAILURE",
       statusCode: status,
@@ -1391,7 +1391,7 @@ const verifyMobileOtp = async (req, res) => {
     return res.status(status).json({
       success: false,
       environment,
-      message: "Mobile 360 OTP verification failed",
+      message: "Account Aggregator OTP verification failed",
       error: providerMessage,
       details: error.response?.data || null,
     });

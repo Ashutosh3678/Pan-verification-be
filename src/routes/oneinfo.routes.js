@@ -211,10 +211,27 @@ router.post(
 );
 
 // -------------------------------------------------------------
-// MOBILE 360 OTP FLOW ENDPOINTS (Zero Data Stored)
+// ACCOUNT AGGREGATOR OTP FLOW ENDPOINTS (Zero Data Stored)
 // -------------------------------------------------------------
 
 // Send OTP
+router.post(
+  "/account-aggregator/otp/send",
+  authenticateClient,
+  checkGuardrail("MOBILE360"),
+  validateSendOtpRequest,
+  oneinfoController.sendMobileOtp
+);
+
+router.post(
+  "/accountaggregator/otp/send",
+  authenticateClient,
+  checkGuardrail("MOBILE360"),
+  validateSendOtpRequest,
+  oneinfoController.sendMobileOtp
+);
+
+// Alias: /mobile360/otp/send
 router.post(
   "/mobile360/otp/send",
   authenticateClient,
@@ -224,6 +241,23 @@ router.post(
 );
 
 // Verify OTP & Fetch Credit Score / User Profile
+router.post(
+  "/account-aggregator/otp/verify",
+  authenticateClient,
+  checkGuardrail("MOBILE360"),
+  validateVerifyOtpRequest,
+  oneinfoController.verifyMobileOtp
+);
+
+router.post(
+  "/accountaggregator/otp/verify",
+  authenticateClient,
+  checkGuardrail("MOBILE360"),
+  validateVerifyOtpRequest,
+  oneinfoController.verifyMobileOtp
+);
+
+// Alias: /mobile360/otp/verify
 router.post(
   "/mobile360/otp/verify",
   authenticateClient,

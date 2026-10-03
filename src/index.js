@@ -31,6 +31,8 @@ app.use("/api/esign", esignRoutes);
 app.use("/api/face", faceRoutes);
 app.use("/api/gstin", gstinRoutes);
 app.use("/api/mobile360", mobile360Routes);
+app.use("/api/account-aggregator", mobile360Routes);
+app.use("/api/accountaggregator", mobile360Routes);
 
 // White-labeled E-Sign Redirection & Download Gateway
 app.get("/esign", oneinfoController.handleEsignRedirect);

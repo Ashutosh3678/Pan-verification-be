@@ -29,7 +29,7 @@ Cashfree Payments operates its **Secure ID (Verification Suite)** on a **hybrid 
 | **PAID (Query)** | PAN, GSTIN, Direct Aadhaar | **₹1.00 – ₹2.50** | Real-time statutory database query. |
 | **PAID (Biometric)**| Face Liveness Detection | **₹1.50 – ₹3.50** | AI neural network inference for anti-spoofing. |
 | **PAID (Signature)**| Aadhaar E-Sign Execution | **₹15.00 – ₹25.00**| Covers statutory UIDAI ESP & CA certificate fees (eMudhra/NSDL). |
-| **PAID (Data Hub)** | Mobile 360 (OTP + Profile) | **₹8.00 – ₹15.00** | Multi-bureau telecom & credit intelligence aggregation. |
+| **PAID (Data Hub)** | Account Aggregator (OTP + Profile) | **₹8.00 – ₹15.00** | Multi-bureau telecom & credit intelligence aggregation. |
 
 ---
 
@@ -51,8 +51,8 @@ Below is the detailed cost breakdown for each of the 13 verification endpoints:
 | **10** | `/api/esign/download/:id` | `GET` | **NO (FREE)** | **₹0.00** | Streaming and downloading the signed document is non-billable. | **₹0.00** |
 | **11** | `/api/face/liveness` | `POST` | **YES** | **₹1.50 – ₹3.50** | Charged per AI anti-spoofing biometric evaluation. | **₹0.00** |
 | **12** | `/api/gstin/verify` | `POST` | **YES** | **₹1.00 – ₹2.50** | Charged per GSTIN registry lookup. | **₹0.00** |
-| **13** | `/api/mobile360/otp/send` | `POST` | **YES** | **₹0.20 – ₹0.50** | Charged per OTP SMS/WhatsApp dispatch gateway cost. | **₹0.00** |
-| *14* | `/api/mobile360/otp/verify` | `POST` | **YES** | **₹8.00 – ₹15.00** | Charged per verified telecom & credit profile intelligence generation. | **₹0.00** |
+| **13** | `/api/account-aggregator/otp/send` | `POST` | **YES** | **₹0.20 – ₹0.50** | Charged per OTP SMS/WhatsApp dispatch gateway cost. | **₹0.00** |
+| *14* | `/api/account-aggregator/otp/verify` | `POST` | **YES** | **₹8.00 – ₹15.00** | Charged per verified telecom & credit profile intelligence generation. | **₹0.00** |
 
 *(Note: High-volume enterprise commitments reduce unit costs by 20% to 40% below standard rate cards).*
 
@@ -80,9 +80,9 @@ In practical customer journeys, services are typically invoked as multi-step wor
 2. **Director PAN Verification** (`/api/pan/verify`): **₹1.50**
 * **Total Upstream Cost per Verified Merchant**: **₹3.30**
 
-### Workflow D: Mobile Identity & Credit Pre-Qualification
-1. **Send OTP** (`/api/mobile360/otp/send`): **₹0.30**
-2. **Verify OTP & Pull Profile** (`/api/mobile360/otp/verify`): **₹10.00**
+### Workflow D: Account Aggregator Identity & Credit Pre-Qualification
+1. **Send OTP** (`/api/account-aggregator/otp/send`): **₹0.30**
+2. **Verify OTP & Pull Profile** (`/api/account-aggregator/otp/verify`): **₹10.00**
 * **Total Upstream Cost per Qualified Lead**: **₹10.30**
 
 ---
@@ -99,7 +99,7 @@ To build a high-margin SaaS/API business on top of OneInfo, the table below outl
 | **Aadhaar E-Sign** | ₹18.00 | **₹28.00 – ₹35.00** | **35% – 48%** |
 | **Face Liveness Check** | ₹2.50 | **₹5.00 – ₹6.50** | **50% – 61%** |
 | **GSTIN Verification** | ₹1.80 | **₹3.50 – ₹5.00** | **48% – 64%** |
-| **Mobile 360 Full Flow** | ₹10.30 | **₹18.00 – ₹25.00** | **42% – 58%** |
+| **Account Aggregator Full Flow** | ₹10.30 | **₹18.00 – ₹25.00** | **42% – 58%** |
 
 ---
 

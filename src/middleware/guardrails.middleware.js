@@ -42,7 +42,7 @@ const checkGuardrail = (service) => {
         ? "ENABLE_PROD_FACE"
         : service === "GSTIN"
         ? "ENABLE_PROD_GSTIN"
-        : service === "MOBILE360"
+        : service === "MOBILE360" || service === "ACCOUNT_AGGREGATOR"
         ? "ENABLE_PROD_MOBILE360"
         : "ENABLE_PROD_ESIGN";
     const isEnabled = process.env[flagKey] !== "false";
@@ -86,7 +86,7 @@ const checkGuardrail = (service) => {
         ? "PROD_FACE_DAILY_LIMIT"
         : service === "GSTIN"
         ? "PROD_GSTIN_DAILY_LIMIT"
-        : service === "MOBILE360"
+        : service === "MOBILE360" || service === "ACCOUNT_AGGREGATOR"
         ? "PROD_MOBILE360_DAILY_LIMIT"
         : "PROD_ESIGN_DAILY_LIMIT";
     const defaultLimit = service === "PAN" || service === "GSTIN" ? 100 : 50;

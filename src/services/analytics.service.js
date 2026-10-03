@@ -61,10 +61,20 @@ const normalizeEndpointPath = (rawEndpoint) => {
     return "/face/liveness";
   if (rawEndpoint.includes("/gstin/verify") || rawEndpoint.includes("/gstin"))
     return "/gstin/verify";
-  if (rawEndpoint.includes("/mobile360/otp/send") || rawEndpoint.includes("/mobile360/send"))
-    return "/mobile360/otp/send";
-  if (rawEndpoint.includes("/mobile360/otp/verify") || rawEndpoint.includes("/mobile360/verify"))
-    return "/mobile360/otp/verify";
+  if (
+    rawEndpoint.includes("/account-aggregator/otp/send") ||
+    rawEndpoint.includes("/accountaggregator/otp/send") ||
+    rawEndpoint.includes("/mobile360/otp/send") ||
+    rawEndpoint.includes("/mobile360/send")
+  )
+    return "/account-aggregator/otp/send";
+  if (
+    rawEndpoint.includes("/account-aggregator/otp/verify") ||
+    rawEndpoint.includes("/accountaggregator/otp/verify") ||
+    rawEndpoint.includes("/mobile360/otp/verify") ||
+    rawEndpoint.includes("/mobile360/verify")
+  )
+    return "/account-aggregator/otp/verify";
   return rawEndpoint;
 };
 
@@ -98,6 +108,7 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
           esign: { enabled: isProdEsignEnabled, todayUsed: 0, dailyLimit: esignDailyLimit, remaining: esignDailyLimit },
           face: { enabled: isProdFaceEnabled, todayUsed: 0, dailyLimit: faceDailyLimit, remaining: faceDailyLimit },
           gstin: { enabled: isProdGstinEnabled, todayUsed: 0, dailyLimit: gstinDailyLimit, remaining: gstinDailyLimit },
+          accountAggregator: { enabled: isProdMobile360Enabled, todayUsed: 0, dailyLimit: mobile360DailyLimit, remaining: mobile360DailyLimit },
           mobile360: { enabled: isProdMobile360Enabled, todayUsed: 0, dailyLimit: mobile360DailyLimit, remaining: mobile360DailyLimit },
         },
       },
@@ -110,6 +121,7 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
       esignEndpointBreakdown: {},
       faceEndpointBreakdown: {},
       gstinEndpointBreakdown: {},
+      accountAggregatorEndpointBreakdown: {},
       mobile360EndpointBreakdown: {},
       recentActivity: [],
     };
@@ -256,9 +268,9 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
     "/gstin/verify": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
   };
 
-  const mobile360Endpoints = {
-    "/mobile360/otp/send": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
-    "/mobile360/otp/verify": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+  const accountAggregatorEndpoints = {
+    "/account-aggregator/otp/send": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
+    "/account-aggregator/otp/verify": { sandbox: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 }, production: { requests: 0, success: 0, failure: 0, avgLatencyMs: 0 } },
   };
 
   for (const item of endpointStats) {
@@ -273,8 +285,8 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
         ? faceEndpoints
         : item._id.service === "GSTIN"
         ? gstinEndpoints
-        : item._id.service === "MOBILE360"
-        ? mobile360Endpoints
+        : item._id.service === "MOBILE360" || item._id.service === "ACCOUNT_AGGREGATOR"
+        ? accountAggregatorEndpoints
         : aadhaarEndpoints;
 
     if (!targetMap[normalized]) {
@@ -324,6 +336,12 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
           dailyLimit: gstinDailyLimit,
           remaining: Math.max(0, gstinDailyLimit - gstinTodayUsed),
         },
+        accountAggregator: {
+          enabled: isProdMobile360Enabled,
+          todayUsed: mobile360TodayUsed,
+          dailyLimit: mobile360DailyLimit,
+          remaining: Math.max(0, mobile360DailyLimit - mobile360TodayUsed),
+        },
         mobile360: {
           enabled: isProdMobile360Enabled,
           todayUsed: mobile360TodayUsed,
@@ -341,7 +359,8 @@ const getSummary = async ({ clientId, environment, timeframeDays = 30 }) => {
     esignEndpointBreakdown: esignEndpoints,
     faceEndpointBreakdown: faceEndpoints,
     gstinEndpointBreakdown: gstinEndpoints,
-    mobile360EndpointBreakdown: mobile360Endpoints,
+    accountAggregatorEndpointBreakdown: accountAggregatorEndpoints,
+    mobile360EndpointBreakdown: accountAggregatorEndpoints,
     recentActivity: recentEvents,
   };
 };

@@ -682,13 +682,13 @@ Validates a 15-character Goods and Services Tax Identification Number (GSTIN) di
 
 ---
 
-## 7. Mobile 360 & Credit Score (CIBIL) Verification
+## 7. Account Aggregator & Credit Score (CIBIL) Verification
 
-Dispatches an OTP to an applicant's mobile number via SMS or WhatsApp, captures user consent, and validates the OTP to retrieve verified personal intelligence including **Credit Score (CIBIL)**, employment history, linked accounts, addresses, and risk signals.
+Dispatches an OTP to an applicant's mobile number via SMS or WhatsApp, captures user consent, and validates the OTP to retrieve verified personal intelligence including **Credit Score (CIBIL)**, employment history, linked accounts, addresses, and risk signals via Account Aggregator intelligence.
 
 ### Integration Flow
-* **Step 1 (`/mobile360/otp/send`)** ➔ Submit applicant mobile number ➔ User receives OTP. From response, take **`data.verificationId`** (pass to Step 2).
-* **Step 2 (`/mobile360/otp/verify`)** ➔ Pass **`verificationId`** and the **`otp`** entered by user ➔ Retrieve verified **Credit Score (CIBIL)**, personal demographics, employment details, and linked accounts.
+* **Step 1 (`/account-aggregator/otp/send`)** ➔ Submit applicant mobile number ➔ User receives OTP. From response, take **`data.verificationId`** (pass to Step 2).
+* **Step 2 (`/account-aggregator/otp/verify`)** ➔ Pass **`verificationId`** and the **`otp`** entered by user ➔ Retrieve verified **Credit Score (CIBIL)**, personal demographics, employment details, and linked accounts.
 
 ---
 
@@ -698,7 +698,7 @@ Dispatches an OTP to a 10-digit mobile number with regulatory consent.
 
 #### Endpoint
 * **Method**: `POST`
-* **URL**: `https://kyc.oneinfo.ai/api/oneinfo/mobile360/otp/send`
+* **URL**: `https://kyc.oneinfo.ai/api/oneinfo/account-aggregator/otp/send` *(or `https://kyc.oneinfo.ai/api/account-aggregator/otp/send`)*
 
 #### Takes In (Request Body)
 ```json
@@ -748,7 +748,7 @@ Validates the OTP entered by the user and returns the full intelligence profile 
 
 #### Endpoint
 * **Method**: `POST`
-* **URL**: `https://kyc.oneinfo.ai/api/oneinfo/mobile360/otp/verify`
+* **URL**: `https://kyc.oneinfo.ai/api/oneinfo/account-aggregator/otp/verify` *(or `https://kyc.oneinfo.ai/api/account-aggregator/otp/verify`)*
 
 #### Takes In (Request Body)
 ```json
@@ -841,7 +841,7 @@ Validates the OTP entered by the user and returns the full intelligence profile 
 
 ---
 
-### Sandbox Test Data for Mobile 360
+### Sandbox Test Data for Account Aggregator
 
 | Parameter / Field | Sandbox Test Value | Expected Outcome | Remarks |
 | :--- | :--- | :--- | :--- |
